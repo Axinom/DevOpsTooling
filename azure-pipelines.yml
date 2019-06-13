@@ -1,0 +1,17 @@
+name: '$(date:yyyyMMdd)$(rev:.r)'
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+- group: "PowerShell Gallery Sander"
+
+steps:
+- pwsh: |
+    Import-Module ./src/Axinom.DevOpsTooling.psd1
+    Set-PowerShellModuleMetadataBeforeBuild -path ./src/Axinom.DevOpsTooling.psd1
+    Set-PowerShellModuleBuildString -path ./src/Axinom.DevOpsTooling.psd1
+    Publish-Module -Path "$(Build.SourcesDirectory)/src" -NugetAPIKey "$(PsGalleryKey)"
