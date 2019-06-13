@@ -64,11 +64,11 @@
 
         Write-Host "Found file: $fileFullName"
 
-        $fileEncoding = Get-FileEncoding($fileFullName)
+        $fileEncoding = Get-FileEncoding -path $fileFullName
 
         Write-Host "Detected file encoding: $fileEncoding"
 
-        $newlines = Get-NewlineCharacters($fileFullName)
+        $newlines = Get-FileNewlineCharacters -path $fileFullName
 
         $matches = Select-String -Path $fileFullName -Pattern $regex -AllMatches | ForEach-Object { $_.Matches } | ForEach-Object { $_.Value }
 
