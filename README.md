@@ -4,13 +4,13 @@ This is a random assortment of DevOps tools used in Axinom projects. It is not e
 
 # Installation
 
-`Install-Module Axinom.DevOpsTools -Scope CurrentUser`
+`Install-Module Axinom.DevOpsTooling -Scope CurrentUser`
 
 You may need to do `Set-ExecutionPolicy RemoteSigned` first if your PowerShell security configuration is set to a very restricted level.
 
 # Usage
 
-1. Execute `Import-Module BikeshedDocumentAuthoring`
+1. Execute `Import-Module Axinom.DevOpsTooling`
 1. Execute commands provided
 
 You need to re-import the module at the start of every PowerShell session.
