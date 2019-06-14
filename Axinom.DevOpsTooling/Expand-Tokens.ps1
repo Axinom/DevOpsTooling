@@ -1,7 +1,6 @@
 ﻿function Expand-Tokens {
     [CmdletBinding()]
-    param
-    (
+    param (
         # Directory or file to do token replacement within.
         [Parameter(Mandatory = $true)]
         [string] $path,
@@ -15,7 +14,7 @@
         [Parameter(Mandatory = $false)]
         [switch] $recursive = $false,
 
-        # Allows overriding the token start string, for custom file formats where the default is problematic.
+        # Allows overriding the token start string, for custom file formats where the default is problematic. Regex syntax.
         [Parameter(Mandatory = $false)]
         [string] $tokenStart = "__",
 
@@ -24,8 +23,7 @@
         [string] $tokenEnd = "__",
 
         # A list of secret-values variables ("key=value","key=value") to include in replacement. Secret build
-        # process variables are not available for replacement without explicitly providing them here. Regex syntax.
-        # Variables names here must use underscored instead of dot, even if in content files the dot is used.
+        # process variables are not available for replacement without explicitly providing them here.
         [Parameter(Mandatory = $false)]
         [Alias("variables")]
         [string[]] $secrets
@@ -45,6 +43,11 @@
             if ($pair.Length -ne 2) {
                 Write-Error "A secret value parameter was not formatted as key=value."
             } else {
+                # We accept input from env variables. Under VSTS, this means . is converted to _ because
+                # env variable names cannot contain dots. We want to be maximally compatible here,
+                # accepting both _ and . in the secret variable names (always matching against _).
+                $pair[0] = $pair[0] -replace "\.", "_"
+
                 $secretValues[$pair[0]] = $pair[1]
 
                 Write-Host "Obtained secret value with name $($pair[0])"
@@ -52,12 +55,9 @@
         }
     }
 
-    # Prepare for string processing.
-    $patterns = @()
-    $regex = $TokenStart + "[A-Za-z0-9._]+" + $TokenEnd
-    $matches = @()
+    $tokenFindingRegex = $tokenStart + "[A-Za-z0-9._]+" + $tokenEnd
 
-    Write-Host "Regex: $regex"
+    Write-Host "Regex: $tokenFindingRegex"
 
     function ProcessFile($file) {
         $fileFullName = $file.FullName
@@ -70,7 +70,7 @@
 
         $newlines = Get-FileNewlineCharacters -path $fileFullName
 
-        $matches = Select-String -Path $fileFullName -Pattern $regex -AllMatches | ForEach-Object { $_.Matches } | ForEach-Object { $_.Value }
+        $matches = Select-String -Path $fileFullName -Pattern $tokenFindingRegex -AllMatches | ForEach-Object { $_.Matches } | ForEach-Object { $_.Value }
 
         if ($matches.Count -eq 0) {
             Write-Host "No placeholders in the file."
@@ -81,11 +81,15 @@
 
         foreach ($match in $matches) {
             $matchedItem = $match
-            $matchedItem = $matchedItem.TrimStart($TokenStart)
-            $matchedItem = $matchedItem.TrimEnd($TokenEnd)
-            $matchedItem = $matchedItem -replace "\.", "_"
+            $matchedItem = $matchedItem.TrimStart($tokenStart)
+            $matchedItem = $matchedItem.TrimEnd($tokenEnd)
 
             Write-Host "Found token $matchedItem" -ForegroundColor Green
+
+            # We accept input from env variables. Under VSTS, this means . is converted to _ because
+            # env variable names cannot contain dots. We want to be maximally compatible here,
+            # accepting both _ and . in the tokens (always matching against _).
+            $matchedItem = $matchedItem -replace "\.", "_"
 
             if (Test-Path Env:$matchedItem) {
                 $matchValue = (Get-ChildItem Env:$matchedItem).Value
