@@ -69,7 +69,7 @@
 
     # VSTS does not immediately update it, so update it manually.
     $env:BUILD_BUILDNUMBER = $version
-    $version = & (Join-Path $myDirectoryPath "Set-VersionStringBranchPrefix.ps1") -primaryBranchName $primaryBranchName -skipBuildNumberUpdate
+    $version = Set-VersionStringBranchPrefix -primaryBranchName $primaryBranchName -skipBuildNumberUpdate
 
     Write-Host "##vso[build.updatebuildnumber]$version"
 
