@@ -1,4 +1,5 @@
 ﻿# Exports the NuGet version string as VSTS process variable "NuGetPackageVersion"
+# Exports the variable also as a PowerShell output value
 function Set-NuGetVersionString {
     [CmdletBinding()]
     param(
@@ -27,6 +28,7 @@ function Set-NuGetVersionString {
     }
 
     # Expected input: 1.2.3-XXXXXX-YYYYYYY
+    # XXXXX can be of any length but is assumed to be eternally incrementing.
     $components = $buildNumber -split "-"
 
     if ($components.Length -ne 3) {
@@ -50,5 +52,6 @@ function Set-NuGetVersionString {
 
     Write-Host "NuGet package version is $version"
 
+    Write-Output $version
     Write-Host "##vso[task.setvariable variable=NuGetPackageVersion;]$version"
 }

@@ -1,3 +1,10 @@
+# This script prefixes the TFS/VSTS version string with a branch name.
+# It will trigger a build number update in VSTS unless the skip switch is specified.
+# A process variable "versionPrefix" will contain the added text.
+# The output of the script will be the updated version string (even if no update was made).
+#
+# If in the primary branch, the version string is not modified (but the prefix is still emitted as empty string).
+
 function Set-VersionStringBranchPrefix {
     [CmdletBinding()]
     param(
@@ -13,13 +20,6 @@ function Set-VersionStringBranchPrefix {
         [switch]$skipBuildNumberUpdate
     )
 
-    # This script prefixes the TFS/VSTS version string with a branch name.
-    # It will trigger a build number update in VSTS unless the skip switch is specified.
-    # A process variable "versionPrefix" will contain the added text.
-    # The output of the script will be the updated version string (even if no update was made).
-    #
-    # If in the primary branch, the version string is not modified (but the prefix is still emitted as empty string).
-
     $version = $env:BUILD_BUILDNUMBER
 
     if (!$version) {
@@ -27,24 +27,45 @@ function Set-VersionStringBranchPrefix {
         return
     }
 
-    # Generate optional version string prefix.
     if ($env:SYSTEM_PULLREQUEST_SOURCEBRANCH) {
-        # If we are in a PR build, stick the PR source branch name in front.
+        # This is an Azure PR build.
+        $sourceRef = $env:SYSTEM_PULLREQUEST_SOURCEBRANCH
+    }
+    elseif ($env:GITHUB_REF) {
+        # This is a GitHub build (either PR or regular)
+        $sourceRef = $env:GITHUB_REF
 
-        $versionPrefix = $env:SYSTEM_PULLREQUEST_SOURCEBRANCH
-
-        # Unfortunately we do not have the pure name but the full/path/to/branch here.
-        # So we cut after the last / and life is easy again.
-        if ($versionPrefix.Contains("/")) {
-            $versionPrefix = $versionPrefix.Substring($versionPrefix.LastIndexOf("/") + 1)
+        # If this is a PR, use the head (foreign) branch ref instead of the triggering ref.
+        if ($env:GITHUB_HEAD_REF) {
+            $sourceRef = $env:GITHUB_HEAD_REF
         }
-
-        # Note that we prefix on PR even if the PR source branch is the primary branch.
-        # This is intentional - we do not want to mix PR builds with main builds.
-        # Might not be strictly necessary, though - reconsider if it proves problematic.
-    } elseif ($env:BUILD_SOURCEBRANCHNAME -and $env:BUILD_SOURCEBRANCHNAME -ne $primaryBranchName) {
+        else {
+            # GitHub workflows run this logic for all builds. Don't prefix if there's nothing special.
+            if ($sourceRef -eq "refs/heads/$primaryBranchName") {
+                $sourceRef = ""
+            }
+        }
+    }
+    elseif ($env:BUILD_SOURCEBRANCHNAME -and $env:BUILD_SOURCEBRANCHNAME -ne $primaryBranchName) {
+        # This is an Azure build of a branch but is not a pull request.
         # If we are not in the primary branch, stick the branch name in front (lowercase).
         $versionPrefix = ($env:BUILD_SOURCEBRANCHNAME).ToLower()
+    }
+    else {
+        # We can't determine any prefix to add - might just be a build from the primary branch and that's all.
+    }
+
+    if ($sourceRef) {
+        # We obtained the reference to the source branch but don't have the prefix figured out yet.
+        # So we cut the reference string (refs/heads/abc123) after the last / and life is easy again.
+        # NB! This only leaves the branch name but loses any other information on the type of reference.
+        if ($sourceRef.Contains("/")) {
+            $versionPrefix = $sourceRef.Substring($sourceRef.LastIndexOf("/") + 1)
+        }
+        else {
+            # What? Not sure - should have been a reference with the /s in it but okay, just go with it.
+            $versionPrefix = $sourceRef
+        }
     }
 
     if ($versionPrefix) {
