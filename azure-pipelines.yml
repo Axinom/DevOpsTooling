@@ -12,10 +12,7 @@ variables:
 steps:
 - pwsh: |
     Import-Module ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
-    Write-Host 11111
     Set-PowerShellModuleMetadataBeforeBuild -path ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
-    Write-Host 22222
     Set-PowerShellModuleBuildString -path ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
-    Write-Host 33333
-    Publish-Module -Path "$(Build.SourcesDirectory)/Axinom.DevOpsTooling" -NugetAPIKey "$(PsGalleryKey)"
-    Write-Host 44444
+    # This can occasionally just hang, it seems.
+    Publish-Module -Path "$(Build.SourcesDirectory)/Axinom.DevOpsTooling" -NugetAPIKey "$(PsGalleryKey)" -Verbose
