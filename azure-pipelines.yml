@@ -12,7 +12,11 @@ variables:
 steps:
 - pwsh: |
     # Try fix the foreverhang in Publish-Module
+    Get-Module PowerShellGet
     Install-Module –Name PowerShellGet –Force
+    Get-Module PowerShellGet
+    Update-Module PowerShellGet -Force
+    Get-Module PowerShellGet
 
     Import-Module ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
     Set-PowerShellModuleMetadataBeforeBuild -path ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
