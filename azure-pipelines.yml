@@ -4,28 +4,15 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 variables:
 - group: "PowerShell Gallery Sander"
 
 steps:
 - pwsh: |
-    # Try fix the foreverhang in Publish-Module
-    Write-Host We have this version
-    Get-Module PowerShellGet
-    
-    Install-Module –Name PowerShellGet –Force
-
-    Write-Host After install command we have this version
-    Get-Module PowerShellGet
-
-    Update-Module PowerShellGet -Force
-    Write-Host After update command we have this version
-    Get-Module PowerShellGet
-
     Import-Module ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
     Set-PowerShellModuleMetadataBeforeBuild -path ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
     Set-PowerShellModuleBuildString -path ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
-    # This can occasionally just hang, it seems.
+    # This can occasionally just hang https://github.com/PowerShell/PowerShellGet/issues/478
     Publish-Module -Path "$(Build.SourcesDirectory)/Axinom.DevOpsTooling" -NugetAPIKey "$(PsGalleryKey)" -Verbose
