@@ -12,7 +12,6 @@ variables:
 steps:
 - pwsh: |
     # Try fix the foreverhang in Publish-Module
-    Install-PackageProvider Nuget –Force
     Install-Module –Name PowerShellGet –Force
 
     Import-Module ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
