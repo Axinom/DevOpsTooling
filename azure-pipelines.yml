@@ -12,10 +12,16 @@ variables:
 steps:
 - pwsh: |
     # Try fix the foreverhang in Publish-Module
+    Write-Host We have this version
     Get-Module PowerShellGet
+    
     Install-Module –Name PowerShellGet –Force
+
+    Write-Host After install command we have this version
     Get-Module PowerShellGet
+
     Update-Module PowerShellGet -Force
+    Write-Host After update command we have this version
     Get-Module PowerShellGet
 
     Import-Module ./Axinom.DevOpsTooling/Axinom.DevOpsTooling.psd1
