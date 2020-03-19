@@ -4,7 +4,7 @@ This is a random assortment of DevOps tools used in Axinom projects. It is not e
 
 # Installation
 
-`Install-Module Axinom.DevOpsTooling -Scope CurrentUser`
+`Install-Module Axinom.DevOpsTooling -Scope CurrentUser -Force`
 
 You may need to do `Set-ExecutionPolicy RemoteSigned` first if your PowerShell security configuration is set to a very restricted level.
 
